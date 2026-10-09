@@ -211,3 +211,21 @@ document.addEventListener('DOMContentLoaded', () => {
         errorMsg.classList.remove('hidden');
     }
 });
+// BAD - might look at the root domain on live hosts:
+fetch('/process_form.php', { ... });
+
+// GOOD - looks relative to the current directory:
+fetch('process_form.php', { ... })
+  .then(response => {
+    // Check if the server actually returned a 200 OK status before parsing JSON
+    if (!response.ok) {
+      throw new Error(`Server returned status ${response.status}`);
+    }
+    return response.json();
+  })
+  .then(data => {
+    console.log('Success:', data);
+  })
+  .catch(error => {
+    console.error('Fetch error:', error);
+  });
