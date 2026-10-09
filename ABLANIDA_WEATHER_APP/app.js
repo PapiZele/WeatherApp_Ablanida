@@ -7,10 +7,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const errorMsg = document.getElementById('error-message');
     const forecastDeck = document.getElementById('forecast-deck');
 
-    // Global Leaflet map instances
+    // Global Leaflet map variables
     let map = null;
     let marker = null;
-    let layerControl = null;
 
     // Initial weather search on load
     fetchWeather({ city: 'Manila' });
@@ -45,6 +44,14 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const query = new URLSearchParams(params).toString();
             const response = await fetch(`api.php?${query}`);
+            
+            // Safe JSON parsing handler
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                const text = await response.text();
+                throw new Error('Server returned non-JSON output. Check PHP backend logs.');
+            }
+
             const data = await response.json();
 
             if (!response.ok) {
@@ -57,7 +64,6 @@ document.addEventListener('DOMContentLoaded', () => {
             hideLoading();
             display.classList.remove('hidden');
 
-            // Render/update interactive Leaflet map and overlays
             updateMap(
                 data.current.coord.lat, 
                 data.current.coord.lon, 
@@ -122,13 +128,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 attribution: '&copy; OpenWeatherMap'
             });
 
-            // Set rain layer active by default
             rainLayer.addTo(map);
 
-            const baseLayers = {
-                "Standard Map": baseMap
-            };
-
+            const baseLayers = { "Standard Map": baseMap };
             const overlays = {
                 "🌧️ Rain / Precipitation": rainLayer,
                 "☁️ Clouds": cloudsLayer,
@@ -136,7 +138,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 "💨 Wind Speed": windLayer
             };
 
-            layerControl = L.control.layers(baseLayers, overlays, { collapsed: true }).addTo(map);
+            L.control.layers(baseLayers, overlays, { collapsed: true }).addTo(map);
             marker = L.marker([lat, lon]).addTo(map);
         } else {
             map.setView([lat, lon], 10);
@@ -211,21 +213,3 @@ document.addEventListener('DOMContentLoaded', () => {
         errorMsg.classList.remove('hidden');
     }
 });
-// BAD - might look at the root domain on live hosts:
-fetch('/process_form.php', { ... });
-
-// GOOD - looks relative to the current directory:
-fetch('process_form.php', { ... })
-  .then(response => {
-    // Check if the server actually returned a 200 OK status before parsing JSON
-    if (!response.ok) {
-      throw new Error(`Server returned status ${response.status}`);
-    }
-    return response.json();
-  })
-  .then(data => {
-    console.log('Success:', data);
-  })
-  .catch(error => {
-    console.error('Fetch error:', error);
-  });
