@@ -85,3 +85,21 @@ http_response_code($resCurrent['cod'] ?? 500);
 echo json_encode([
     'error' => $resCurrent['message'] ?? $resForecast['message'] ?? 'Unable to fetch weather data.'
 ]);
+
+<?php
+// Prevent PHP warnings/errors from cluttering the output text
+error_reporting(0); 
+ini_set('display_errors', 0);
+
+// Force response header to JSON
+header('Content-Type: application/json; charset=utf-8');
+
+// Your logic here...
+$response = [
+    'status' => 'success',
+    'message' => 'Your message has been sent successfully!'
+];
+
+echo json_encode($response);
+exit;
+?>
